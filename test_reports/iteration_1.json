@@ -1,0 +1,24 @@
+{
+  "summary": "Full backend + frontend testing of PuntRank Aus. Backend: 27/27 pytest cases pass covering auth (login/register/me/wrong-password), meetings (5/day AEST), races with pro gating, exotics, aces selections, best-bets with graded results, movers, results & strike-rate, PDF reports (free + pro 402), Stripe checkout (auth + unauth 401), admin (reseed, users list, toggle-pro, non-admin 403). Frontend: age gate + localStorage persistence, meetings page (5 cards + stats), meeting detail (race tabs, runner expand with reasoning), exotics tab, pin runner + bet slip drawer with unit stake calculation, guest continue, admin login shows PRO badge, admin page (reseed + 5 users listed), pricing page (3 AUD plans), Stripe checkout redirect verified (URL contains checkout.stripe.com), reports page renders 6 reports. All flows work.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": ["/app/backend/tests/backend_test.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py is 635 lines — approaching the 700 LOC threshold. Consider splitting into routers (auth, racing, payments, admin) as feature set grows.",
+    "Login attempts collection has no TTL / expiry — locked users are never auto-unlocked after 15 min (the code only checks time on retry). Consider adding TTL index on last_at or resetting count when time elapsed.",
+    "_grade_started_races uses `random` at module scope inside a request handler — non-deterministic and mutates data on every meetings/results/bestbets request. Consider throttling or moving to a background job.",
+    "CORS defaults to '*' (from .env). With allow_credentials=True this can be rejected by strict browsers. Set explicit origins in production.",
+    "No rate-limiting on /auth/register — spammable.",
+    "PDF endpoints run seed + grade on every request; consider caching or ETag.",
+    "engine.build_exotics assumed to always return >=4 exotics for anon locked=3 test to hold; if fewer, locked count could go negative — add guard."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "admin@puntrank.com.au / AcePunter2026! (from /app/memory/test_credentials.md — valid).",
+  "seed_data_creation": "None (used built-in seeded mock data; created several TEST_* users during register tests — recommend periodic cleanup).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend tests in /app/backend/tests/backend_test.py; run via `cd /app/backend && python -m pytest tests/backend_test.py -v`. All 27 tests pass in ~7s. Frontend fully verified with Playwright — bet-slip pin button only appears after clicking runner-expand (RunnerRow.jsx line 45 gates it behind expanded state). Admin/pricing pages need explicit `wait_for_selector` on plan-card / admin-user testids because they fetch after render. Stripe checkout confirmed redirecting to checkout.stripe.com successfully.",
+  "rca of the issue": "No issues found."
+}
