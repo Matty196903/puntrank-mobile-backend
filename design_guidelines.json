@@ -1,0 +1,124 @@
+{
+  "project_name": "PuntRank Aus",
+  "app_type": "mobile_web_app",
+  "domain": "www.puntrank.com.au",
+  "archetype": "THE PERFORMANCE PRO (Tactical Racing Analytics)",
+  "emotional_tone": "High-precision, authoritative, tactical, premium dark-mode racing intelligence",
+  "theme_preference": "Dark theme dominant (Emerald Turf Green & High-Visibility Gold Accents on Deep Charcoal/Obsidian)",
+  "typography": {
+    "heading_font": "Barlow Condensed, sans-serif (or Outfit / Cabinet Grotesk)",
+    "body_font": "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+    "mono_font": "JetBrains Mono, monospace",
+    "font_family_imports": "@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');",
+    "scale": {
+      "h1": "text-3xl sm:text-4xl font-extrabold uppercase tracking-tight",
+      "h2": "text-2xl sm:text-3xl font-bold tracking-tight",
+      "h3": "text-xl sm:text-2xl font-bold",
+      "h4": "text-lg font-semibold",
+      "body": "text-sm sm:text-base leading-relaxed",
+      "caption": "text-xs font-medium tracking-wide text-zinc-400",
+      "badge": "text-xs font-mono font-bold tracking-wider uppercase"
+    }
+  },
+  "colors": {
+    "background": {
+      "primary": "#0A0D0E",
+      "card": "#121719",
+      "surface_hover": "#1A2023",
+      "overlay": "rgba(10, 13, 14, 0.85)"
+    },
+    "brand": {
+      "emerald_turf": "#10B981",
+      "emerald_glow": "#059669",
+      "racing_gold": "#F59E0B",
+      "racing_gold_hover": "#D97706",
+      "plunge_red": "#EF4444",
+      "electric_cyan": "#06B6D4"
+    },
+    "neutrals": {
+      "text_primary": "#F4F4F5",
+      "text_secondary": "#A1A1AA",
+      "text_muted": "#71717A",
+      "border": "#27272A",
+      "border_accent": "rgba(16, 185, 129, 0.3)"
+    },
+    "confidence_levels": {
+      "a_grade": "#10B981",
+      "high": "#3B82F6",
+      "moderate": "#F59E0B",
+      "speculative": "#EC4899"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": "backdrop-blur-md bg-zinc-900/80 border border-zinc-800/80 shadow-2xl",
+    "card_style": "bg-[#121719] border border-zinc-800/80 rounded-xl hover:border-emerald-500/40 transition-all duration-200 shadow-md",
+    "glow_effect": "shadow-[0_0_20px_rgba(16,185,129,0.15)]",
+    "plunge_pulse": "animate-pulse border-red-500/60 bg-red-950/20",
+    "badge_style": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+  },
+  "layout": {
+    "mobile_first": true,
+    "max_container_width": "max-w-md mx-auto sm:max-w-2xl lg:max-w-7xl",
+    "header_height": "h-14 sm:h-16",
+    "bottom_nav_height": "h-16 pb-safe",
+    "spacing_scale": "p-3 sm:p-5 lg:p-8",
+    "grid": {
+      "meetings": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4",
+      "races_strip": "flex overflow-x-auto snap-x snap-mandatory space-x-2 pb-2 scrollbar-none",
+      "runners_list": "space-y-2.5"
+    }
+  },
+  "image_urls": [
+    {
+      "category": "hero_banner",
+      "url": "https://images.unsplash.com/photo-1516673699707-4f2a243fafaf?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwzfHxob3JzZSUyMHJhY2luZyUyMHRyYWNrJTIwdGhvcm91Z2hicmVkJTIwam9ja2V5JTIwYWN0aW9ufGVufDB8fHx8MTc5MDM3ODI4NXww&ixlib=rb-4.1.0&q=85",
+      "description": "Dynamic jockey in full sprint on thoroughbred horse"
+    },
+    {
+      "category": "race_action_1",
+      "url": "https://images.unsplash.com/photo-1526094633853-031707a44819?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwyfHxob3JzZSUyMHJhY2luZyUyMHRyYWNrJTIwdGhvcm91Z2hicmVkJTIwam9ja2V5JTIwYWN0aW9ufGVufDB8fHx8MTc5MDM3ODI4NXww&ixlib=rb-4.1.0&q=85",
+      "description": "Close-up of thoroughbred jockeys battling in home straight"
+    },
+    {
+      "category": "race_pack_2",
+      "url": "https://images.unsplash.com/photo-1635895882609-942f36e1db5d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHw0fHxob3JzZSUyMHJhY2luZyUyMHRyYWNrJTIwdGhvcm91Z2hicmVkJTIwam9ja2V5JTIwYWN0aW9ufGVufDB8fHx8MTc5MDM3ODI4NXww&ixlib=rb-4.1.0&q=85",
+      "description": "Thoroughbred field turning into the straight on lush turf track"
+    },
+    {
+      "category": "finish_line_3",
+      "url": "https://images.unsplash.com/photo-1507514604110-ba3347c457f6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwxfHxob3JzZSUyMHJhY2luZyUyMHRyYWNrJTIwdGhvcm91Z2hicmVkJTIwam9ja2V5JTIwYWN0aW9ufGVufDB8fHx8MTc5MDM3ODI4NXww&ixlib=rb-4.1.0&q=85",
+      "description": "Jockey taking victory jump at daytime race track"
+    }
+  ],
+  "components_structure": {
+    "18plus_age_gate": "Modal dialog requiring confirmation of 18+ age before initial site interaction + permanent Gamble Responsibly footer bar",
+    "navigation_bar": "Sticky top bar with PuntRank Aus logo, live status indicator, Guest/User profile button, Pro Upgrade CTA button",
+    "mobile_bottom_bar": "Fixed bottom bar for mobile screens (Meetings, Ace's Picks, Plunges, Results, Bet Slip)",
+    "today_meetings_view": "Filterable track selector (NSW, VIC, QLD, SA, WA), track condition badges (Good 4, Soft 5, Heavy 8), race times countdown",
+    "race_card_runner": "Collapsible runner row displaying barrier, silk icon, saddle cloth number, horse name, jockey, weight, win/place probability bar, confidence badge, market movement arrow, and expansion panel with plain-English reasoning",
+    "aces_selections": "Dedicated tab for Ace's 60-year system selections (Winners, Places, Quaddies) with strike-rate badges and ROI indicators",
+    "exotics_calculator": "Interactive exotic combination builder (Exacta, Quinella, Trifecta, First Four, Quaddie) with calculated box/standout combinations",
+    "market_movers": "Plunge feed showing significant odds movements (e.g. $8.50 -> $4.20) with track bias and speed map alerts",
+    "bet_slip_drawer": "Slide-over drawer for simulated unit calculation, strategy notes, and pinned runner compilation",
+    "results_strike_rate": "Historical performance tab with strike-rate percentages, daily profit/loss units, and interactive Recharts graphs",
+    "pdf_reports": "Form guide & tips report center with printable summary view and PDF download triggers",
+    "pro_subscription_paywall": "Stripe pricing modal with A$9.99/mo, A$49.99/yr, A$99.00 lifetime tiers, feature list comparison, and mock checkout flow",
+    "admin_panel": "Secure admin tab to update race odds, add Ace's tips, publish plunge alerts, grade race results, and view subscriber stats"
+  },
+  "compliance_and_disclaimers": {
+    "age_limit": "Strict 18+ Australian requirement",
+    "gambling_disclaimer": "PuntRank Aus is an informational probability ranking tool, not a bookmaker or wagering site. No live betting takes place on this platform.",
+    "responsible_gambling_slogan": "Chances are you're about to lose. For free and confidential support call 1800 858 858 or visit gamblinghelponline.org.au"
+  },
+  "instructions_to_main_agent": [
+    "Strictly follow mobile-first design: components must look native on mobile viewports (375px-430px) and seamlessly expand to desktop grids.",
+    "Include data-testid on every interactive element (buttons, tabs, runner rows, inputs, modal close triggers) following kebab-case, e.g. data-testid='age-gate-confirm-btn'.",
+    "Ensure dark theme by default using dark charcoal background (#0A0D0E) with turf emerald green (#10B981) and gold (#F59E0B) accents.",
+    "Use pure JS / JSX React files (do not use TypeScript syntax in .js/.jsx files).",
+    "Ensure the 18+ Age Gate modal is shown on first visit and stored in localStorage.",
+    "Integrate Sonner for toast feedback (e.g., pinning runners, updating bet slip, copying exotics).",
+    "Ensure all mock data reflects realistic Australian racing tracks (Flemington, Randwick, Caulfield, Doomben, Rosehill, Morphettville) with realistic runner names, jockeys (J. McDonald, C. Williams, J. Kah), barrier positions, and odds movements.",
+    "Provide seamless guest access with a banner prompting guest users to create an account or upgrade to Pro for unlocked A-Grade bets.",
+    "Provide a working mock Stripe subscription modal with plan selection (A$9.99/mo, A$49.99/yr, A$99.00 lifetime)."
+  ]
+}
