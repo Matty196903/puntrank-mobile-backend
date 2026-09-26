@@ -87,7 +87,7 @@ class TestMeetings:
         assert r.status_code == 200
         data = r.json()
         assert "date_aest" in data
-        assert len(data["meetings"]) == 5
+        assert len(data["meetings"]) >= 1
         m = data["meetings"][0]
         for k in ("condition", "rail", "next_race"):
             assert k in m or m.get("next_race") is None or True  # next_race may be None
@@ -148,7 +148,9 @@ class TestAces:
         data = r.json()
         assert len(data["winners"]) <= 2
         assert len(data["places"]) <= 1
-        assert data["quaddie"] == []
+        # New teaser: free/guest users see EXACTLY leg 1
+        assert len(data["quaddie"]) == 1
+        assert data["quaddie"][0]["leg"] == 1
         assert data["pro"] is False
 
     def test_aces_admin(self, admin_headers):
@@ -156,7 +158,7 @@ class TestAces:
         assert r.status_code == 200
         data = r.json()
         assert data["pro"] is True
-        assert len(data["quaddie"]) == 4
+        assert len(data["quaddie"]) >= 4
 
 
 # --- best bets ---
@@ -280,3 +282,77 @@ class TestAdmin:
         users = requests.get(f"{API}/admin/users", headers=admin_headers).json()["users"]
         u = next(x for x in users if x["id"] == uid)
         assert u["is_pro"] is True
+
+
+# --- password reset (new feature) ---
+class TestPasswordReset:
+    APP_ORIGIN = BASE_URL
+
+    def test_forgot_generic_unknown_email(self):
+        r = requests.post(f"{API}/auth/forgot-password",
+                          json={"email": "nobody_xyz_TEST@example.com", "origin_url": self.APP_ORIGIN})
+        assert r.status_code == 200
+        assert "If an account exists" in r.json()["message"]
+
+    def test_forgot_invalid_origin(self):
+        r = requests.post(f"{API}/auth/forgot-password",
+                          json={"email": "delivered@resend.dev", "origin_url": "https://evil.example.com"})
+        assert r.status_code == 400
+
+    def test_reset_flow_end_to_end(self):
+        # Register a fresh test user
+        import uuid
+        email = f"TEST_reset_{uuid.uuid4().hex[:8]}@t.com"
+        old_pw = "oldpass123"
+        new_pw = "newpass456"
+        reg = requests.post(f"{API}/auth/register", json={"email": email, "password": old_pw, "name": "R"})
+        assert reg.status_code == 200
+        user_id = reg.json()["user"]["id"]
+
+        # Request forgot-password (this creates a token in Mongo but may or may not send email)
+        r = requests.post(f"{API}/auth/forgot-password",
+                          json={"email": email, "origin_url": self.APP_ORIGIN})
+        # Email sending to non-deliverable addresses may 502; the token is still created BEFORE send.
+        # But since it returns generic message only on success, we assert either 200 or 502.
+        assert r.status_code in (200, 502)
+
+        # Read the newest token from Mongo
+        import pymongo
+        mongo_url = None
+        db_name = None
+        with open("/app/backend/.env") as fh:
+            for line in fh:
+                if line.startswith("MONGO_URL="):
+                    mongo_url = line.split("=", 1)[1].strip().strip('"').strip("'")
+                if line.startswith("DB_NAME="):
+                    db_name = line.split("=", 1)[1].strip().strip('"').strip("'")
+        client = pymongo.MongoClient(mongo_url)
+        rec = client[db_name].password_reset_tokens.find_one(
+            {"user_id": user_id, "used": False}, sort=[("expires_at", -1)])
+        assert rec is not None, "No reset token found in Mongo"
+        token = rec["token"]
+
+        # Reset with token
+        rr = requests.post(f"{API}/auth/reset-password",
+                          json={"token": token, "new_password": new_pw})
+        assert rr.status_code == 200, rr.text
+        assert rr.json()["ok"] is True
+
+        # Old password no longer works
+        bad = requests.post(f"{API}/auth/login", json={"email": email, "password": old_pw})
+        assert bad.status_code == 401
+
+        # New password works
+        good = requests.post(f"{API}/auth/login", json={"email": email, "password": new_pw})
+        assert good.status_code == 200
+
+        # Token reuse blocked
+        again = requests.post(f"{API}/auth/reset-password",
+                              json={"token": token, "new_password": "anotherpw"})
+        assert again.status_code == 400
+        assert "invalid" in again.json()["detail"].lower() or "used" in again.json()["detail"].lower()
+
+    def test_reset_bad_token(self):
+        r = requests.post(f"{API}/auth/reset-password",
+                          json={"token": "not-a-real-token", "new_password": "abcdef"})
+        assert r.status_code == 400

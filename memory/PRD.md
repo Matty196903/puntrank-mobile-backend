@@ -36,6 +36,14 @@ Build "PuntRank Aus" — full-stack WEB app (target: www.puntrank.com.au). Web v
 - Admin panel: reseed, user list, toggle Pro
 - Testing: 27/27 backend pytest + full Playwright frontend pass (iteration_1)
 
+## Implemented (2026-06 update 3)
+- Password reset: POST /api/auth/forgot-password (Emergent-managed Resend email, generic anti-enumeration response, origin allowlist) + /api/auth/reset-password (1h TTL, single-use); frontend forgot mode on AuthPage + /reset-password page
+- Free quaddie teaser: guests see leg 1 of Ace's quaddie, ProLock for remaining 3
+- Share button on meetings page (navigator.share + clipboard fallback) sharing /guide + today's top pick
+- /guide "How it works" page with A/B/C ratings explained; header help icon
+- Deployment readiness: PASS (fixed destructive startup deletes — now only in admin reseed; batched N+1 queries; PF results sync moved to background task)
+- Testing: iteration_3 100% pass (31/31 backend + all frontend flows)
+
 ## Backlog / remaining
 - P0: User pastes existing backend export (server.py, pdf_reports.py, models, Stripe price IDs) → merge/reconcile so mobile app shares this DB
 - P1: Deploy to production + custom domain www.puntrank.com.au; user must claim Stripe sandbox + KYC for live payments

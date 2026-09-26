@@ -6,6 +6,7 @@ load_dotenv(ROOT_DIR / '.env')
 
 import os
 import uuid
+import asyncio
 import logging
 import bcrypt
 import jwt
@@ -140,11 +141,14 @@ ALLOWED_ORIGIN_SUFFIXES = (".preview.emergentagent.com", ".emergent.host", "punt
 
 
 def _validate_origin(origin_url: str) -> str:
-    origin = origin_url.rstrip("/")
-    host = origin.split("//")[-1]
+    from urllib.parse import urlparse
+    parsed = urlparse(origin_url)
+    host = parsed.netloc
+    if parsed.scheme not in ("https", "http") or not host or parsed.query or parsed.fragment or parsed.path.strip("/"):
+        raise HTTPException(400, "Invalid origin")
     if not any(host == s.lstrip(".") or host.endswith(s) for s in ALLOWED_ORIGIN_SUFFIXES):
         raise HTTPException(400, "Invalid origin")
-    return origin
+    return f"{parsed.scheme}://{host}"
 
 
 # ---------- auth routes ----------
@@ -214,7 +218,10 @@ async def forgot_password(body: ForgotPasswordInput):
             f'<p style="font-size:13px;color:#555">This link expires in 1 hour. If you did not request this, you can safely ignore this email.</p>'
             f'<p style="font-size:12px;color:#888">Sent by {escape(email_service.EMAIL_FROM_NAME)}. We never ask for your password or card details by email. 18+ — gamble responsibly.</p>'
             f'</td></tr></table>')
-    await email_service.send_email(to=email, subject="Reset your PuntRank Aus password", html=html)
+    try:
+        await email_service.send_email(to=email, subject="Reset your PuntRank Aus password", html=html)
+    except Exception:
+        logger.warning(f"Reset email could not be delivered to {email}")
     return generic
 
 
@@ -249,13 +256,16 @@ async def ensure_seed(force: bool = False):
     exists = await db.meetings.find_one({"date": date})
     if exists and not force:
         return
-    await db.meetings.delete_many({"date": date})
-    old_meetings = await db.meetings.find({}, {"_id": 0, "id": 1}).to_list(500)
-    stale = [m["id"] for m in old_meetings]
-    if stale:
-        await db.races.delete_many({"meeting_id": {"$in": stale}})
-        await db.runners.delete_many({"meeting_id": {"$in": stale}})
-        await db.meetings.delete_many({"id": {"$in": stale}})
+    if force:
+        # manual admin reseed only: replace today's data and purge >30-day-old data
+        todays = await db.meetings.find({"date": date}, {"_id": 0, "id": 1}).to_list(50)
+        cutoff = (datetime.now(AEST) - timedelta(days=30)).strftime("%Y-%m-%d")
+        old = await db.meetings.find({"date": {"$lt": cutoff}}, {"_id": 0, "id": 1}).to_list(1000)
+        stale = [m["id"] for m in todays + old]
+        if stale:
+            await db.races.delete_many({"meeting_id": {"$in": stale}})
+            await db.runners.delete_many({"meeting_id": {"$in": stale}})
+            await db.meetings.delete_many({"id": {"$in": stale}})
     meetings, races, runners = [], [], []
     if os.environ.get("PUNTING_FORM_API_KEY"):
         try:
@@ -270,6 +280,13 @@ async def ensure_seed(force: bool = False):
     logger.info(f"Seeded {len(meetings)} mock meetings / {len(races)} races for {date}")
 
 
+async def _pf_sync_bg(date: str):
+    try:
+        await pf_client.sync_results(db, date)
+    except Exception as e:
+        logger.warning(f"PF results sync failed: {e!r}")
+
+
 async def _grade_started_races():
     """Grade finished races: official PF results for live data, simulation for mock data."""
     now = datetime.now(AEST)
@@ -279,10 +296,7 @@ async def _grade_started_races():
         if not meta or (now - datetime.fromisoformat(meta["at"])).total_seconds() > 180:
             await db.meta.update_one({"key": "pf_results_sync"},
                                      {"$set": {"at": now.isoformat()}}, upsert=True)
-            try:
-                await pf_client.sync_results(db, date)
-            except Exception as e:
-                logger.warning(f"PF results sync failed: {e}")
+            asyncio.create_task(_pf_sync_bg(date))
         return
     pending = await db.races.find({"status": "upcoming"}, {"_id": 0}).to_list(500)
     import random as _rnd
@@ -313,9 +327,14 @@ async def get_meetings():
     await _grade_started_races()
     date = today_aest()
     meetings = await db.meetings.find({"date": date}, {"_id": 0}).to_list(20)
+    all_races = await db.races.find({"meeting_id": {"$in": [m["id"] for m in meetings]}},
+                                    {"_id": 0}).sort("number", 1).to_list(300)
+    races_by_meeting = {}
+    for r in all_races:
+        races_by_meeting.setdefault(r["meeting_id"], []).append(r)
     out = []
     for m in meetings:
-        races = await db.races.find({"meeting_id": m["id"]}, {"_id": 0}).sort("number", 1).to_list(20)
+        races = races_by_meeting.get(m["id"], [])
         nxt = next((r for r in races if r["status"] == "upcoming"), None)
         out.append({**m, "resulted": sum(1 for r in races if r["status"] == "resulted"),
                     "next_race": {"number": nxt["number"], "start_aest": nxt["start_aest"]} if nxt else None})
@@ -383,10 +402,14 @@ async def aces_selections(user: Optional[dict] = Depends(get_optional_user)):
     quaddie = []
     if feature:
         legs = sorted([r for r in races if r.get("is_quaddie_leg")], key=lambda x: x["number"])
+        leg_runners = await db.runners.find({"race_id": {"$in": [x["id"] for x in legs]},
+                                             "rank": {"$lte": 2}}, {"_id": 0}).sort("rank", 1).to_list(50)
+        by_leg = {}
+        for r in leg_runners:
+            by_leg.setdefault(r["race_id"], []).append(r)
         for i, leg in enumerate(legs, 1):
-            sel = await db.runners.find({"race_id": leg["id"], "rank": {"$lte": 2}}, {"_id": 0}).sort("rank", 1).to_list(4)
             quaddie.append({"leg": i, "race_number": leg["number"], "distance": leg["distance"],
-                            "start_aest": leg["start_aest"], "selections": sel})
+                            "start_aest": leg["start_aest"], "selections": by_leg.get(leg["id"], [])})
     pro = is_pro(user)
     win_list = decorate(winners)
     place_list = decorate(places)
