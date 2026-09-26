@@ -68,11 +68,12 @@ def _public_user(u: dict) -> dict:
 
 
 async def _user_from_request(request: Request) -> Optional[dict]:
-    token = request.cookies.get("access_token")
+    token = None
+    ah = request.headers.get("Authorization", "")
+    if ah.startswith("Bearer "):
+        token = ah[7:]
     if not token:
-        ah = request.headers.get("Authorization", "")
-        if ah.startswith("Bearer "):
-            token = ah[7:]
+        token = request.cookies.get("access_token")
     if not token:
         return None
     try:
@@ -425,11 +426,11 @@ async def results():
 # ---------- PDF reports ----------
 REPORTS = [
     {"key": "form_guide", "title": "Saturday Form Guide", "desc": "Full-day form for every meeting: rankings, probabilities and grades.", "pro": False},
-    {"key": "top10", "title": "Top 10 Rated Runners", "desc": "The 10 highest-rated runners across all tracks today.", "pro": False},
+    {"key": "top10", "title": "Ace's Top 10 Picks", "desc": "Ace's 10 highest-rated runners across all tracks today — the daily shortlist.", "pro": False},
     {"key": "results_wrap", "title": "Sunday Results Wrap", "desc": "Every resulted race graded against Ace's top picks.", "pro": True},
     {"key": "scorecard", "title": "A-Grade Scorecard", "desc": "Units won/lost following the top pick in every resulted race.", "pro": True},
     {"key": "staking", "title": "Staking Calculator", "desc": "Confidence-based unit staking plan with bankroll rules.", "pro": True},
-    {"key": "quaddie", "title": "Quaddie Ticket", "desc": "Printable quaddie ticket for the feature meeting with flexi costs.", "pro": True},
+    {"key": "quaddie", "title": "Ace's Quaddie Ticket", "desc": "Printable quaddie for the feature meeting — 2 selections per leg with flexi costs.", "pro": True},
 ]
 
 

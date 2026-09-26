@@ -1,0 +1,23 @@
+{
+  "summary": "COMPLETED end-to-end Stripe subscription purchase against live TEST Stripe. Registered brand-new user via UI, went to /pricing, clicked checkout-btn-pro_monthly, was redirected to checkout.stripe.com, filled hosted form with test card 4242 4242 4242 4242 12/30 CVC 123 + Australian phone, submitted Subscribe, and was redirected back to /payment/success?session_id=... . payment-confirmed testid became visible and header pro-badge appeared while upgrade-btn disappeared. Backend verification: GET /api/auth/me returned is_pro=true, pro_plan='pro_monthly' for the new user. GET /api/best-bets returned pro=true, locked=0, 100 bets, 2 multis. GET /api/selections/aces returned pro=true with 8 quaddie legs. Race detail: all 15 runners had non-null reasoning. Lifetime plan (pro_lifetime) POST /api/payments/checkout for a fresh user returned 200 with a checkout_url and session_id, and status endpoint reported status=initiated/payment_status=pending as expected. Pricing guard: logged-out user clicking checkout-btn-pro_monthly is redirected to /auth?next=/pricing (with 'Sign in first to upgrade' toast). All 5 review checklist items PASS.",
+  "backend_issues": {"critical": [], "minor": [
+    {"endpoint": "/api/auth/me", "issue": "Cookie access_token takes priority over Authorization header (server.py _user_from_request). This means a stale httpOnly cookie from a previously-logged-in account will override an explicit Bearer token sent by another user in the same browser session. Not a security issue per se, but can confuse multi-user testing; consider preferring Authorization header when both are present."}
+  ]},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": ["/app/backend/tests/backend_test.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py still 654 LOC — approaching 700 threshold; recommend router split (auth/racing/payments/admin).",
+    "_user_from_request checks cookie before Authorization header — surprising behavior when both present.",
+    "Stripe checkout create_checkout has a managed_payments-then-automatic_tax fallback; both paths verified working (managed_payments produces a simpler card+phone form, fallback path requires full billing address). Neither path returns a friendly error to the frontend if BOTH fail — bubble up more informative error.",
+    "payment_transactions status polling in /api/payments/status is the only reliable Pro-grant path in preview (no public webhook URL). Works but silently swallows Stripe errors — log them at warning level for observability."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "Fresh users created during test: subtest_1790392645@puntrank.test / test1234 (now PRO, pro_monthly); subtest_life_1790392728@puntrank.test / test1234 (free, has pending lifetime checkout session). Admin & default test user creds from /app/memory/test_credentials.md remain valid.",
+  "seed_data_creation": "Several subtest_*@puntrank.test users + 1 real completed Stripe subscription (pro_monthly, ~US$8.03 test charge) + 1 pending lifetime checkout session. Recommend periodic Mongo/Stripe test-mode cleanup.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "To repeat the E2E Stripe purchase, use the exact pattern in this run: after landing on checkout.stripe.com, DO NOT wait for networkidle (Stripe polls forever); instead wait_for_selector('input#email'). Managed-payments variant fields: input#email, input#cardNumber, input#cardExpiry, input#cardCvc, input#billingName, select#billingCountry, input[name=phoneNumber] (Australian format 412345678). Automatic-tax fallback variant additionally requires clicking 'Enter address manually' text and filling input#billingAddressLine1 / input#billingLocality / select#billingAdministrativeArea (NSW) / input#billingPostalCode. Sub-agent test success URL example: /payment/success?session_id=cs_test_... . PaymentSuccessPage polls /api/payments/status every 2s up to 10 times; Pro grant lands via that fallback since preview has no webhook.",
+  "rca of the issue": "No bugs — feature works end-to-end. Only nit: cookie-over-header priority in auth."
+}

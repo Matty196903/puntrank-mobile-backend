@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { CalendarDays, Trophy, TrendingDown, BarChart3, Crown, FileText, LogOut, UserRound, Shield, Ticket } from "lucide-react";
+import { CalendarDays, Trophy, TrendingDown, BarChart3, Crown, FileText, LogOut, UserRound, Shield, Ticket, HelpCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSlip } from "@/context/SlipContext";
 import { BetSlipDrawer } from "@/components/BetSlipDrawer";
@@ -30,6 +30,10 @@ export const Layout = ({ children }) => {
             </span>
           </Link>
           <div className="flex items-center gap-2">
+            <Link to="/guide" data-testid="nav-guide"
+              className={`p-2 rounded-full hover:bg-zinc-800/70 transition-colors ${loc.pathname === "/guide" ? "text-emerald-400" : "text-zinc-400"}`}>
+              <HelpCircle className="w-5 h-5" />
+            </Link>
             <Link to="/reports" data-testid="nav-reports"
               className={`p-2 rounded-full hover:bg-zinc-800/70 transition-colors ${loc.pathname === "/reports" ? "text-emerald-400" : "text-zinc-400"}`}>
               <FileText className="w-5 h-5" />

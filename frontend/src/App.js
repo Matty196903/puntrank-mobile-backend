@@ -17,6 +17,7 @@ import PricingPage from "@/pages/PricingPage";
 import PaymentSuccessPage from "@/pages/PaymentSuccessPage";
 import AuthPage from "@/pages/AuthPage";
 import AdminPage from "@/pages/AdminPage";
+import GuidePage from "@/pages/GuidePage";
 
 function App() {
   const [ageOk, setAgeOk] = useState(() => localStorage.getItem("pr_age18") === "1");
@@ -43,6 +44,7 @@ function App() {
               <Route path="/payment/cancel" element={<Navigate to="/pricing" />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/guide" element={<GuidePage />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Layout>

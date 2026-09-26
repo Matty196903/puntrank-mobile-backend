@@ -86,7 +86,7 @@ def results_wrap_pdf(date, meetings, resulted, runners_by_race):
 
 
 def top10_pdf(date, picks, mmap, races_map):
-    buf, doc, story = _doc("Top 10 Rated Runners", date)
+    buf, doc, story = _doc("Ace's Top 10 Picks", date)
     rows = [["Rank", "Horse", "Track / Race", "Win %", "Odds", "Confidence", "Grade"]]
     for i, r in enumerate(picks[:10], 1):
         race = races_map[r["race_id"]]
@@ -100,7 +100,7 @@ def top10_pdf(date, picks, mmap, races_map):
 
 
 def quaddie_pdf(date, track, legs):
-    buf, doc, story = _doc(f"Quaddie Ticket — {track}", date)
+    buf, doc, story = _doc(f"Ace's Quaddie — {track}", date)
     total = 1
     for leg in legs:
         story.append(Paragraph(f"Leg {leg['leg']} — Race {leg['race_number']} ({leg['distance']}m)", H2))
