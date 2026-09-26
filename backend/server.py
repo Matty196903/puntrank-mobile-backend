@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 import engine
+import pf_client
 import pdf_reports
 
 AEST = ZoneInfo("Australia/Sydney")
@@ -189,16 +190,34 @@ async def ensure_seed(force: bool = False):
         await db.races.delete_many({"meeting_id": {"$in": stale}})
         await db.runners.delete_many({"meeting_id": {"$in": stale}})
         await db.meetings.delete_many({"id": {"$in": stale}})
+    meetings, races, runners = [], [], []
+    if os.environ.get("PUNTING_FORM_API_KEY"):
+        try:
+            if await pf_client.load_today(db, date):
+                return
+        except Exception as e:
+            logger.warning(f"Punting Form load failed, falling back to mock data: {e!r}")
     meetings, races, runners = engine.seed_day(date, datetime.now(AEST))
     await db.meetings.insert_many([{**m} for m in meetings])
     await db.races.insert_many([{**r} for r in races])
     await db.runners.insert_many([{**r} for r in runners])
-    logger.info(f"Seeded {len(meetings)} meetings / {len(races)} races for {date}")
+    logger.info(f"Seeded {len(meetings)} mock meetings / {len(races)} races for {date}")
 
 
 async def _grade_started_races():
-    """Mark races whose start time has passed as resulted (simulated live grading)."""
+    """Grade finished races: official PF results for live data, simulation for mock data."""
     now = datetime.now(AEST)
+    date = today_aest()
+    if await db.meetings.find_one({"date": date, "source": "punting_form"}):
+        meta = await db.meta.find_one({"key": "pf_results_sync"})
+        if not meta or (now - datetime.fromisoformat(meta["at"])).total_seconds() > 180:
+            await db.meta.update_one({"key": "pf_results_sync"},
+                                     {"$set": {"at": now.isoformat()}}, upsert=True)
+            try:
+                await pf_client.sync_results(db, date)
+            except Exception as e:
+                logger.warning(f"PF results sync failed: {e}")
+        return
     pending = await db.races.find({"status": "upcoming"}, {"_id": 0}).to_list(500)
     import random as _rnd
     for race in pending:

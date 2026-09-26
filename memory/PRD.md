@@ -15,7 +15,10 @@ Build "PuntRank Aus" — full-stack WEB app (target: www.puntrank.com.au). Web v
 - Auth: JWT (Bearer + httpOnly cookie), bcrypt, brute-force lockout, admin seeded on startup
 - Stripe: Emergent claimable sandbox (test mode) — prices by lookup_key: pro_monthly (A$9.99/mo), pro_annual (A$49.99/yr), pro_lifetime (A$99 one-off), all AUD. Webhook POST /api/stripe/webhook + status-poll fallback GET /api/payments/status/{id}; both grant is_pro. Tax mode: Stripe managed payments (full).
 - "Today" computed in Australia/Sydney (zoneinfo)
-- Racing data: MOCKED realistic AU data seeded per AEST day (Punting Form API key pending from user; PUNTING_FORM_API_KEY env placeholder exists)
+- Racing data: LIVE via Punting Form API v2 (api.puntingform.com.au, key in PUNTING_FORM_API_KEY env). backend/pf_client.py fetches meetingslist + fields per AEST day, ranks runners via form-based scoring (winPct, placePct, last10, distance/track records, barrier, weight), syncs official results (throttled 3 min) to grade top picks. Mock engine.py remains as automatic fallback if PF is unreachable.
+
+## Implemented (2026-06 update 2)
+- Punting Form live data integration (pf_client.py): real AUS TAB meetings, races, runners, official results grading; timezone-safe AEST time display on frontend (lib/time.js)
 
 ## Implemented (2026-06 first build)
 - 18+ age gate (localStorage) + persistent gamble-responsibly footer
@@ -34,7 +37,6 @@ Build "PuntRank Aus" — full-stack WEB app (target: www.puntrank.com.au). Web v
 - Testing: 27/27 backend pytest + full Playwright frontend pass (iteration_1)
 
 ## Backlog / remaining
-- P0: Connect real Punting Form API (needs user's key) replacing mocked engine seed
 - P0: User pastes existing backend export (server.py, pdf_reports.py, models, Stripe price IDs) → merge/reconcile so mobile app shares this DB
 - P1: Deploy to production + custom domain www.puntrank.com.au; user must claim Stripe sandbox + KYC for live payments
 - P1: Password reset flow (forgot password email)

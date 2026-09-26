@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import dayjs from "dayjs";
 import { TrendingDown, ArrowRight } from "lucide-react";
 import api from "@/lib/api";
+import { fmtAest } from "@/lib/time";
 
 export default function PlungesPage() {
   const [data, setData] = useState(null);
@@ -24,7 +24,7 @@ export default function PlungesPage() {
                   <p className="font-semibold text-sm">{m.number}. {m.name}</p>
                   {m.move_pct >= 35 && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/20 text-red-400">PLUNGE</span>}
                 </div>
-                <p className="text-xs text-zinc-500">{m.track} R{m.race_number} · {dayjs(m.start_aest).format("h:mm A")} · {m.jockey}</p>
+                <p className="text-xs text-zinc-500">{m.track} R{m.race_number} · {fmtAest(m.start_aest)} · {m.jockey}</p>
               </div>
               <div className="text-right">
                 <div className="flex items-center gap-1.5 justify-end font-mono-num text-sm">

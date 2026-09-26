@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import dayjs from "dayjs";
 import { Crown } from "lucide-react";
 import api from "@/lib/api";
 import { ProLock } from "@/components/ProLock";
+import { fmtAest } from "@/lib/time";
 
 export default function BestBetsPage() {
   const [data, setData] = useState(null);
@@ -29,7 +29,7 @@ export default function BestBetsPage() {
                   )}
                   {!b.graded && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">LIVE</span>}
                 </div>
-                <p className="text-xs text-zinc-500">{b.track} R{b.race_number} · {dayjs(b.start_aest).format("h:mm A")} · {b.jockey}</p>
+                <p className="text-xs text-zinc-500">{b.track} R{b.race_number} · {fmtAest(b.start_aest)} · {b.jockey}</p>
               </div>
               <div className="text-right">
                 <p className="font-mono-num text-emerald-400 font-bold">${b.odds_current}</p>

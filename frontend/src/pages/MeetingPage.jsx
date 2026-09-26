@@ -1,12 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import dayjs from "dayjs";
 import { ArrowLeft, Copy } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
 import { RunnerRow } from "@/components/RunnerRow";
 import { ProLock } from "@/components/ProLock";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { fmtAest } from "@/lib/time";
 
 export default function MeetingPage() {
   const { id } = useParams();
@@ -51,7 +51,7 @@ export default function MeetingPage() {
           <button key={r.id} data-testid={`race-tab-${r.number}`} onClick={() => setRaceId(r.id)}
             className={`shrink-0 px-3.5 py-2 rounded-xl text-sm font-bold border transition-colors ${raceId === r.id ? "bg-emerald-600 border-emerald-600 text-white" : r.status === "resulted" ? "border-zinc-800 text-zinc-500" : "border-zinc-700 text-zinc-300 hover:border-emerald-500/60"}`}>
             R{r.number}
-            <span className="block text-[10px] font-medium opacity-80">{r.status === "resulted" ? "Resulted" : dayjs(r.start_aest).format("h:mm A")}</span>
+            <span className="block text-[10px] font-medium opacity-80">{r.status === "resulted" ? "Resulted" : fmtAest(r.start_aest)}</span>
           </button>
         ))}
       </div>
@@ -60,7 +60,7 @@ export default function MeetingPage() {
         <div className="mt-3">
           <div className="pr-card p-3 mb-4">
             <p className="font-semibold text-sm">Race {race.race.number} — {race.race.name}</p>
-            <p className="text-xs text-zinc-500">{race.race.distance}m · {dayjs(race.race.start_aest).format("h:mm A")} AEST {race.race.status === "resulted" && "· RESULTED"}</p>
+            <p className="text-xs text-zinc-500">{race.race.distance}m · {fmtAest(race.race.start_aest)} AEST {race.race.status === "resulted" && "· RESULTED"}</p>
             {race.race.result && (
               <p className="text-xs text-amber-400 mt-1 font-semibold" data-testid="race-result-line">
                 Result: {race.race.result.positions.join(" - ")} · Win div ${race.race.result.win_dividend}

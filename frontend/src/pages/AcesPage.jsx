@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import dayjs from "dayjs";
 import { Trophy } from "lucide-react";
 import api from "@/lib/api";
 import { ProLock } from "@/components/ProLock";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { fmtAest } from "@/lib/time";
 
 const PickCard = ({ r, kind }) => {
   const res = r.result;
@@ -13,7 +13,7 @@ const PickCard = ({ r, kind }) => {
       <div className="flex items-center justify-between">
         <div>
           <p className="font-semibold text-sm">{r.number}. {r.name}</p>
-          <p className="text-xs text-zinc-500">{r.track} R{r.race_number} · {dayjs(r.start_aest).format("h:mm A")} · {r.jockey}</p>
+          <p className="text-xs text-zinc-500">{r.track} R{r.race_number} · {fmtAest(r.start_aest)} · {r.jockey}</p>
         </div>
         <div className="text-right">
           <p className="font-mono-num text-emerald-400 font-bold">${r.odds_current}</p>
@@ -61,7 +61,7 @@ export default function AcesPage() {
               {data.quaddie.map((leg) => (
                 <div key={leg.leg} className="pr-card p-4" data-testid={`quaddie-leg-${leg.leg}`}>
                   <p className="font-display text-lg font-bold uppercase text-emerald-400">Leg {leg.leg} — Race {leg.race_number}</p>
-                  <p className="text-xs text-zinc-500">{leg.distance}m · {dayjs(leg.start_aest).format("h:mm A")}</p>
+                  <p className="text-xs text-zinc-500">{leg.distance}m · {fmtAest(leg.start_aest)}</p>
                   <div className="mt-2 space-y-1">
                     {leg.selections.map((s) => (
                       <div key={s.id} className="flex justify-between text-sm">

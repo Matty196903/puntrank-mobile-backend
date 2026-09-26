@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import dayjs from "dayjs";
 import { BarChart3 } from "lucide-react";
 import api from "@/lib/api";
+import { fmtAest } from "@/lib/time";
 
 export default function ResultsPage() {
   const [data, setData] = useState(null);
@@ -32,7 +32,7 @@ export default function ResultsPage() {
                 {r.top_pick_won ? "TOP PICK WON" : r.top_pick_placed ? "TOP PICK PLACED" : "UNPLACED"}
               </span>
             </div>
-            <p className="text-xs text-zinc-500">{r.distance}m · {dayjs(r.start_aest).format("h:mm A")} · Pick: {r.top_pick.number}. {r.top_pick.name}</p>
+            <p className="text-xs text-zinc-500">{r.distance}m · {fmtAest(r.start_aest)} · Pick: {r.top_pick.number}. {r.top_pick.name}</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {r.placings.map((p) => (
                 <span key={p.pos} className={`text-xs px-2 py-1 rounded-lg border ${p.pos === 1 ? "border-amber-500/40 bg-amber-500/10 text-amber-300" : "border-zinc-800 text-zinc-400"}`}>

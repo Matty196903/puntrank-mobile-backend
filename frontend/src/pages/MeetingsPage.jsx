@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import dayjs from "dayjs";
 import { MapPin, ChevronRight, Flag } from "lucide-react";
 import api from "@/lib/api";
+import { fmtAest } from "@/lib/time";
 
-const COND_COLOR = (c) => c.startsWith("Good") ? "bg-emerald-500/15 text-emerald-400" : c.startsWith("Soft") ? "bg-amber-500/15 text-amber-400" : "bg-red-500/15 text-red-400";
+const COND_COLOR = (c) => c.startsWith("Good") ? "bg-emerald-500/15 text-emerald-400" : c.startsWith("Soft") ? "bg-amber-500/15 text-amber-400" : c.startsWith("Heavy") ? "bg-red-500/15 text-red-400" : "bg-zinc-700/40 text-zinc-300";
 
 export default function MeetingsPage() {
   const [data, setData] = useState(null);
@@ -53,7 +54,7 @@ export default function MeetingsPage() {
               </div>
               <p className="text-xs text-zinc-400 mt-1.5">
                 {m.resulted}/{m.races_count} run
-                {m.next_race && <> · Next R{m.next_race.number} at {dayjs(m.next_race.start_aest).format("h:mm A")}</>}
+                {m.next_race && <> · Next R{m.next_race.number} at {fmtAest(m.next_race.start_aest)}</>}
               </p>
             </div>
             <ChevronRight className="w-5 h-5 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
