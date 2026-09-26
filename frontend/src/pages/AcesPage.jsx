@@ -55,27 +55,22 @@ export default function AcesPage() {
           {!data.pro && <ProLock count={0} label="All place selections unlocked with Pro" testid="places-pro-lock" />}
         </TabsContent>
         <TabsContent value="quaddie" className="space-y-2.5 mt-3">
-          {data.pro ? (
-            <>
-              {data.quaddie_track && <p className="text-sm text-zinc-300 font-semibold">Feature quaddie — {data.quaddie_track}</p>}
-              {data.quaddie.map((leg) => (
-                <div key={leg.leg} className="pr-card p-4" data-testid={`quaddie-leg-${leg.leg}`}>
-                  <p className="font-display text-lg font-bold uppercase text-emerald-400">Leg {leg.leg} — Race {leg.race_number}</p>
-                  <p className="text-xs text-zinc-500">{leg.distance}m · {fmtAest(leg.start_aest)}</p>
-                  <div className="mt-2 space-y-1">
-                    {leg.selections.map((s) => (
-                      <div key={s.id} className="flex justify-between text-sm">
-                        <span>{s.number}. {s.name}</span>
-                        <span className="font-mono-num text-emerald-400">${s.odds_current}</span>
-                      </div>
-                    ))}
+          {data.quaddie_track && data.quaddie.length > 0 && <p className="text-sm text-zinc-300 font-semibold">Feature quaddie — {data.quaddie_track}</p>}
+          {data.quaddie.map((leg) => (
+            <div key={leg.leg} className="pr-card p-4" data-testid={`quaddie-leg-${leg.leg}`}>
+              <p className="font-display text-lg font-bold uppercase text-emerald-400">Leg {leg.leg} — Race {leg.race_number}</p>
+              <p className="text-xs text-zinc-500">{leg.distance}m · {fmtAest(leg.start_aest)}</p>
+              <div className="mt-2 space-y-1">
+                {leg.selections.map((s) => (
+                  <div key={s.id} className="flex justify-between text-sm">
+                    <span>{s.number}. {s.name}</span>
+                    <span className="font-mono-num text-emerald-400">${s.odds_current}</span>
                   </div>
-                </div>
-              ))}
-            </>
-          ) : (
-            <ProLock count={4} label="quaddie legs" testid="quaddie-pro-lock" />
-          )}
+                ))}
+              </div>
+            </div>
+          ))}
+          {!data.pro && <ProLock count={3} label="remaining quaddie legs" testid="quaddie-pro-lock" />}
         </TabsContent>
       </Tabs>
     </div>

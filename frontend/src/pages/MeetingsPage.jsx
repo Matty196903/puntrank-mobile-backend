@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
-import { MapPin, ChevronRight, Flag } from "lucide-react";
+import { MapPin, ChevronRight, Flag, Share2 } from "lucide-react";
+import { toast } from "sonner";
 import api from "@/lib/api";
 import { fmtAest } from "@/lib/time";
 
@@ -18,14 +19,35 @@ export default function MeetingsPage() {
 
   if (!data) return <p className="text-zinc-500 text-sm py-10 text-center" data-testid="meetings-loading">Loading today's meetings…</p>;
 
+  const share = async () => {
+    let pickLine = "";
+    try {
+      const { data: bb } = await api.get("/best-bets");
+      const top = bb.bets[0];
+      if (top) pickLine = `Today's top pick: ${top.number}. ${top.name} (${top.track} R${top.race_number}) @ $${top.odds_current}. `;
+    } catch { /* share without pick */ }
+    const text = `🏇 PuntRank Aus — Australia's racing form ranker. ${pickLine}See how it works: ${window.location.origin}/guide (18+ only, gamble responsibly)`;
+    if (navigator.share) {
+      try { await navigator.share({ title: "PuntRank Aus", text, url: `${window.location.origin}/guide` }); return; } catch { return; }
+    }
+    await navigator.clipboard.writeText(text);
+    toast.success("Copied to clipboard", { description: "Paste it to your mates 🏇" });
+  };
+
   return (
     <div className="fade-up" data-testid="meetings-page">
-      <div className="mb-5">
-        <p className="text-xs font-bold text-amber-500 uppercase tracking-widest">Australian Eastern Time</p>
-        <h1 className="font-display text-4xl font-extrabold uppercase tracking-tight mt-1">
-          Today's Meetings
-        </h1>
-        <p className="text-sm text-zinc-400 mt-1">{dayjs(data.date_aest).format("dddd D MMMM YYYY")} · Ranked by Ace's 60-year system</p>
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold text-amber-500 uppercase tracking-widest">Australian Eastern Time</p>
+          <h1 className="font-display text-4xl font-extrabold uppercase tracking-tight mt-1">
+            Today's Meetings
+          </h1>
+          <p className="text-sm text-zinc-400 mt-1">{dayjs(data.date_aest).format("dddd D MMMM YYYY")} · Ranked by Ace's 60-year system</p>
+        </div>
+        <button data-testid="share-btn" onClick={share}
+          className="shrink-0 mt-1 flex items-center gap-1.5 px-3 py-2 rounded-full border border-zinc-700 text-zinc-300 text-xs font-semibold hover:border-emerald-500/60 hover:text-emerald-400 transition-colors">
+          <Share2 className="w-4 h-4" /> Share
+        </button>
       </div>
 
       {stats && stats.resulted > 0 && (

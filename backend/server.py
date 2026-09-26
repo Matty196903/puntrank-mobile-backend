@@ -22,6 +22,9 @@ from typing import Optional
 import engine
 import pf_client
 import pdf_reports
+import email_service
+import secrets
+from html import escape
 
 AEST = ZoneInfo("Australia/Sydney")
 JWT_ALGORITHM = "HS256"
@@ -123,6 +126,27 @@ class CheckoutRequest(BaseModel):
     origin_url: str
 
 
+class ForgotPasswordInput(BaseModel):
+    email: str
+    origin_url: str
+
+
+class ResetPasswordInput(BaseModel):
+    token: str
+    new_password: str = Field(min_length=6)
+
+
+ALLOWED_ORIGIN_SUFFIXES = (".preview.emergentagent.com", ".emergent.host", "puntrank.com.au", "localhost:3000")
+
+
+def _validate_origin(origin_url: str) -> str:
+    origin = origin_url.rstrip("/")
+    host = origin.split("//")[-1]
+    if not any(host == s.lstrip(".") or host.endswith(s) for s in ALLOWED_ORIGIN_SUFFIXES):
+        raise HTTPException(400, "Invalid origin")
+    return origin
+
+
 # ---------- auth routes ----------
 @api.post("/auth/register")
 async def register(body: RegisterInput, response: Response):
@@ -167,6 +191,47 @@ async def login(body: LoginInput, request: Request, response: Response):
 async def logout(response: Response):
     response.delete_cookie("access_token", path="/")
     return {"ok": True}
+
+
+@api.post("/auth/forgot-password")
+async def forgot_password(body: ForgotPasswordInput):
+    origin = _validate_origin(body.origin_url)
+    email = body.email.strip().lower()
+    user = await db.users.find_one({"email": email}, {"_id": 0})
+    generic = {"ok": True, "message": "If an account exists for that email, a reset link has been sent."}
+    if not user:
+        return generic
+    token = secrets.token_urlsafe(32)
+    await db.password_reset_tokens.insert_one({
+        "token": token, "user_id": user["id"], "used": False,
+        "expires_at": datetime.now(timezone.utc) + timedelta(hours=1)})
+    link = f"{origin}/reset-password?token={token}"
+    html = (f'<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif;color:#222">'
+            f'<h2 style="margin:0 0 12px">Reset your PuntRank Aus password</h2>'
+            f'<p>Hi {escape(user.get("name") or "there")}, we received a request to reset your password.</p>'
+            f'<p><a href="{link}" style="display:inline-block;padding:12px 22px;background:#10B981;color:#ffffff;'
+            f'text-decoration:none;border-radius:24px;font-weight:bold">Set a new password</a></p>'
+            f'<p style="font-size:13px;color:#555">This link expires in 1 hour. If you did not request this, you can safely ignore this email.</p>'
+            f'<p style="font-size:12px;color:#888">Sent by {escape(email_service.EMAIL_FROM_NAME)}. We never ask for your password or card details by email. 18+ — gamble responsibly.</p>'
+            f'</td></tr></table>')
+    await email_service.send_email(to=email, subject="Reset your PuntRank Aus password", html=html)
+    return generic
+
+
+@api.post("/auth/reset-password")
+async def reset_password(body: ResetPasswordInput):
+    rec = await db.password_reset_tokens.find_one({"token": body.token}, {"_id": 0})
+    if not rec or rec.get("used"):
+        raise HTTPException(400, "This reset link is invalid or has already been used")
+    expires = rec["expires_at"]
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+    if expires < datetime.now(timezone.utc):
+        raise HTTPException(400, "This reset link has expired — request a new one")
+    await db.users.update_one({"id": rec["user_id"]},
+                              {"$set": {"password_hash": hash_password(body.new_password)}})
+    await db.password_reset_tokens.update_one({"token": body.token}, {"$set": {"used": True}})
+    return {"ok": True, "message": "Password updated — you can now sign in"}
 
 
 @api.get("/auth/me")
@@ -326,7 +391,7 @@ async def aces_selections(user: Optional[dict] = Depends(get_optional_user)):
     win_list = decorate(winners)
     place_list = decorate(places)
     if not pro:
-        win_list, place_list, quaddie = win_list[:2], place_list[:1], []
+        win_list, place_list, quaddie = win_list[:2], place_list[:1], quaddie[:1]
     return {"winners": win_list, "places": place_list, "quaddie": quaddie,
             "quaddie_track": feature["track"] if feature else None, "pro": pro}
 
@@ -635,6 +700,8 @@ async def startup():
     await db.runners.create_index("race_id")
     await db.races.create_index("meeting_id")
     await db.login_attempts.create_index("identifier")
+    await db.password_reset_tokens.create_index("expires_at", expireAfterSeconds=0)
+    await db.password_reset_tokens.create_index("token")
     admin_email = os.environ["ADMIN_EMAIL"]
     admin_password = os.environ["ADMIN_PASSWORD"]
     existing = await db.users.find_one({"email": admin_email})

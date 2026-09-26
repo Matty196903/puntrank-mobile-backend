@@ -18,6 +18,7 @@ import PaymentSuccessPage from "@/pages/PaymentSuccessPage";
 import AuthPage from "@/pages/AuthPage";
 import AdminPage from "@/pages/AdminPage";
 import GuidePage from "@/pages/GuidePage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 
 function App() {
   const [ageOk, setAgeOk] = useState(() => localStorage.getItem("pr_age18") === "1");
@@ -45,6 +46,7 @@ function App() {
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/guide" element={<GuidePage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Layout>
