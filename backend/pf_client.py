@@ -122,8 +122,9 @@ async def load_today(db, date_aest: str) -> bool:
     candidates = [m for m in meetings_raw
                   if m.get("tabMeeting") and (m.get("track") or {}).get("country") == "AUS"
                   and not m.get("isBarrierTrial") and not m.get("isJumps")]
-    candidates.sort(key=lambda m: 0 if (m["track"].get("location") == "M") else 1)
-    candidates = candidates[:8]
+    loc_order = {"M": 0, "P": 1, "C": 2}
+    candidates.sort(key=lambda m: loc_order.get(m["track"].get("location"), 3))
+    candidates = candidates[:14]
     if not candidates:
         return False
 
