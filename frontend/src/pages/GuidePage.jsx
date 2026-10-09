@@ -31,6 +31,14 @@ export default function GuidePage() {
         plain-English reasoning. It's a probability-ranking tool, not a betting service.
       </p>
 
+      <h2 className="font-display text-2xl font-bold uppercase tracking-tight mt-7 mb-3">60-Second Video Tour</h2>
+      <div className="pr-card p-2 overflow-hidden">
+        <video data-testid="tutorial-video" controls playsInline preload="metadata"
+          className="w-full max-w-[390px] mx-auto rounded-lg"
+          src="/tutorial.mp4" />
+        <p className="text-[11px] text-zinc-500 text-center py-2">Sign-up → reading the grades → Ace's quaddie → downloading PDFs</p>
+      </div>
+
       <h2 className="font-display text-2xl font-bold uppercase tracking-tight mt-7 mb-3">The A / B / C Ratings</h2>
       <div className="space-y-2.5">
         {GRADES.map(({ g, style, title, desc }) => (
