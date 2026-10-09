@@ -50,6 +50,36 @@ export default function MeetingsPage() {
         </button>
       </div>
 
+      {(() => {
+        const jumps = data.meetings.filter((m) => m.next_race).sort((a, b) => a.next_race.start_aest.localeCompare(b.next_race.start_aest)).slice(0, 6);
+        return jumps.length > 0 && (
+          <div className="mb-5" data-testid="next-to-jump">
+            <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-2">Next to Jump</p>
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
+              {jumps.map((m) => (
+                <Link key={m.id} to={`/meeting/${m.id}`} data-testid={`jump-chip-${m.id}`}
+                  className="shrink-0 pr-card px-3 py-2 flex items-center gap-2 border-emerald-500/20">
+                  <span className="font-display font-bold uppercase text-sm">{m.track}</span>
+                  <span className="text-xs text-emerald-400 font-semibold">R{m.next_race.number}</span>
+                  <span className="font-mono-num text-xs text-zinc-400">{fmtAest(m.next_race.start_aest)}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      <div className="grid grid-cols-2 gap-2 mb-5">
+        <Link to="/aces" data-testid="home-aces-card" className="pr-card p-3.5 border-amber-500/25 group">
+          <p className="font-display text-lg font-bold uppercase text-amber-400">Ace's Exotics</p>
+          <p className="text-[11px] text-zinc-500 mt-0.5">Winners · Places · Quaddie</p>
+        </Link>
+        <Link to="/best-bets" data-testid="home-agrade-card" className="pr-card p-3.5 border-emerald-500/25 group">
+          <p className="font-display text-lg font-bold uppercase text-emerald-400">A-Grade Plays</p>
+          <p className="text-[11px] text-zinc-500 mt-0.5">Strongest bets, graded live</p>
+        </Link>
+      </div>
+
       {stats && stats.resulted > 0 && (
         <div className="grid grid-cols-3 gap-2 mb-5">
           <div className="pr-card p-3 text-center"><p className="font-mono-num text-xl font-bold text-emerald-400" data-testid="stat-win-strike">{stats.win_strike}%</p><p className="text-[11px] text-zinc-500">Win strike</p></div>

@@ -44,6 +44,13 @@ Build "PuntRank Aus" — full-stack WEB app (target: www.puntrank.com.au). Web v
 - Deployment readiness: PASS (fixed destructive startup deletes — now only in admin reseed; batched N+1 queries; PF results sync moved to background task)
 - Testing: iteration_3 100% pass (31/31 backend + all frontend flows)
 
+## Implemented (2026-06 update 3b — mobile parity alignment)
+- Tabs restructured: Racing / Market / Exotics / Results / Account (old routes kept as aliases)
+- New ExoticsPage (race exotics browser + best-bet shortlist + multis), new AccountPage (profile, subscription, legal links)
+- Racing home: "Next to Jump" strip + "Ace's Exotics" / "A-Grade Plays" cards; pages renamed to match mobile
+- Routes /pay-success and /pay-cancel added; /auth/me + login already return is_pro + pro_plan
+- Pending: user will share GitHub repo with server.py (5325 lines) + pdf_reports.py (1508 lines, WeasyPrint HTML-in-Python, 20 build_*_html fns, NO Jinja2 templates) → merge as-is, switch PDFs fully to WeasyPrint, add /api/guide/*.pdf + /api/billing/config + /api/stripe/* routes. Stripe stays on claimed puntrank-web account. Krok Odds key pending.
+
 ## Backlog / remaining
 - P0: User pastes existing backend export (server.py, pdf_reports.py, models, Stripe price IDs) → merge/reconcile so mobile app shares this DB
 - P1: Deploy to production + custom domain www.puntrank.com.au; user must claim Stripe sandbox + KYC for live payments

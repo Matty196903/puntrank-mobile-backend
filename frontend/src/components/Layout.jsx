@@ -1,16 +1,16 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { CalendarDays, Trophy, TrendingDown, BarChart3, Crown, FileText, LogOut, UserRound, Shield, Ticket, HelpCircle } from "lucide-react";
+import { CalendarDays, TrendingDown, BarChart3, FileText, LogOut, UserRound, Shield, Ticket, HelpCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSlip } from "@/context/SlipContext";
 import { BetSlipDrawer } from "@/components/BetSlipDrawer";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const NAV = [
-  { to: "/", label: "Meetings", icon: CalendarDays, testid: "nav-meetings" },
-  { to: "/aces", label: "Ace's", icon: Trophy, testid: "nav-aces" },
-  { to: "/best-bets", label: "A-Grade", icon: Crown, testid: "nav-best-bets" },
-  { to: "/plunges", label: "Plunges", icon: TrendingDown, testid: "nav-plunges" },
+  { to: "/", label: "Racing", icon: CalendarDays, testid: "nav-racing" },
+  { to: "/market", label: "Market", icon: TrendingDown, testid: "nav-market" },
+  { to: "/exotics", label: "Exotics", icon: Ticket, testid: "nav-exotics" },
   { to: "/results", label: "Results", icon: BarChart3, testid: "nav-results" },
+  { to: "/account", label: "Account", icon: UserRound, testid: "nav-account" },
 ];
 
 export const Layout = ({ children }) => {

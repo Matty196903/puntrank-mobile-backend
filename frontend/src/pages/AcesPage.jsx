@@ -36,7 +36,7 @@ export default function AcesPage() {
     <div className="fade-up" data-testid="aces-page">
       <div className="flex items-center gap-2">
         <Trophy className="w-6 h-6 text-amber-500" />
-        <h1 className="font-display text-4xl font-extrabold uppercase tracking-tight">Ace's Selections</h1>
+        <h1 className="font-display text-4xl font-extrabold uppercase tracking-tight">Ace's Exotics</h1>
       </div>
       <p className="text-sm text-zinc-400 mt-1 mb-4">60 years of form craft distilled into today's Winners, Places and Quaddies.</p>
 

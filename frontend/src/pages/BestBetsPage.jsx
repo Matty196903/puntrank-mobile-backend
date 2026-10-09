@@ -13,7 +13,7 @@ export default function BestBetsPage() {
     <div className="fade-up" data-testid="best-bets-page">
       <div className="flex items-center gap-2">
         <Crown className="w-6 h-6 text-amber-500" />
-        <h1 className="font-display text-4xl font-extrabold uppercase tracking-tight">A-Grade Bets</h1>
+        <h1 className="font-display text-4xl font-extrabold uppercase tracking-tight">A-Grade Plays</h1>
       </div>
       <p className="text-sm text-zinc-400 mt-1 mb-4">Strongest bets of the day, graded live against results.</p>
 
