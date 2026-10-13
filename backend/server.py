@@ -689,6 +689,20 @@ async def admin_users(admin: dict = Depends(get_admin)):
     return {"users": users}
 
 
+@api.get("/admin/payments")
+async def admin_payments(admin: dict = Depends(get_admin)):
+    txs = await db.payment_transactions.find({}, {"_id": 0}).sort("created_at", -1).to_list(200)
+    uids = list({t.get("user_id") for t in txs if t.get("user_id")})
+    emails = {u["id"]: u["email"] async for u in db.users.find({"id": {"$in": uids}}, {"_id": 0, "id": 1, "email": 1})}
+    for t in txs:
+        t["amount"] = round(t.get("amount", 0) / 100, 2)
+        t["email"] = emails.get(t.get("user_id"))
+    paid = [t for t in txs if t.get("payment_status") == "paid"]
+    revenue = round(sum(t.get("amount", 0) for t in paid), 2)
+    return {"transactions": txs, "paid_count": len(paid), "revenue": revenue,
+            "mode": os.environ.get("STRIPE_MODE", "test")}
+
+
 @api.post("/admin/users/{user_id}/toggle-pro")
 async def toggle_pro(user_id: str, admin: dict = Depends(get_admin)):
     u = await db.users.find_one({"id": user_id}, {"_id": 0})
