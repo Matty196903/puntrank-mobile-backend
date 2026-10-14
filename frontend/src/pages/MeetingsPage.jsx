@@ -4,13 +4,15 @@ import dayjs from "dayjs";
 import { MapPin, ChevronRight, Flag, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
-import { fmtAest } from "@/lib/time";
+import { fmtAest, useNow, minsToJump } from "@/lib/time";
 
 const COND_COLOR = (c) => c.startsWith("Good") ? "bg-emerald-500/15 text-emerald-400" : c.startsWith("Soft") ? "bg-amber-500/15 text-amber-400" : c.startsWith("Heavy") ? "bg-red-500/15 text-red-400" : "bg-zinc-700/40 text-zinc-300";
 
 export default function MeetingsPage() {
   const [data, setData] = useState(null);
   const [stats, setStats] = useState(null);
+  const [metroOnly, setMetroOnly] = useState(() => localStorage.getItem("pr_metro") === "1");
+  const now = useNow();
 
   useEffect(() => {
     api.get("/meetings").then((r) => setData(r.data));
@@ -18,6 +20,14 @@ export default function MeetingsPage() {
   }, []);
 
   if (!data) return <p className="text-zinc-500 text-sm py-10 text-center" data-testid="meetings-loading">Loading today's meetings…</p>;
+
+  const hasMetro = data.meetings.some((m) => m.location === "M");
+  const shownMeetings = metroOnly && hasMetro ? data.meetings.filter((m) => m.location === "M") : data.meetings;
+  const toggleMetro = () => {
+    const v = !metroOnly;
+    setMetroOnly(v);
+    localStorage.setItem("pr_metro", v ? "1" : "0");
+  };
 
   const share = async () => {
     let pickLine = "";
@@ -51,19 +61,26 @@ export default function MeetingsPage() {
       </div>
 
       {(() => {
-        const jumps = data.meetings.filter((m) => m.next_race).sort((a, b) => a.next_race.start_aest.localeCompare(b.next_race.start_aest)).slice(0, 6);
+        const jumps = shownMeetings.filter((m) => m.next_race).sort((a, b) => a.next_race.start_aest.localeCompare(b.next_race.start_aest)).slice(0, 6);
         return jumps.length > 0 && (
           <div className="mb-5" data-testid="next-to-jump">
             <p className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-2">Next to Jump</p>
             <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
-              {jumps.map((m) => (
-                <Link key={m.id} to={`/meeting/${m.id}`} data-testid={`jump-chip-${m.id}`}
-                  className="shrink-0 pr-card px-3 py-2 flex items-center gap-2 border-emerald-500/20">
-                  <span className="font-display font-bold uppercase text-sm">{m.track}</span>
-                  <span className="text-xs text-emerald-400 font-semibold">R{m.next_race.number}</span>
-                  <span className="font-mono-num text-xs text-zinc-400">{fmtAest(m.next_race.start_aest)}</span>
-                </Link>
-              ))}
+              {jumps.map((m) => {
+                const cd = minsToJump(m.next_race.start_aest, now);
+                return (
+                  <Link key={m.id} to={`/meeting/${m.id}`} data-testid={`jump-chip-${m.id}`}
+                    className="shrink-0 pr-card px-3 py-2 flex items-center gap-2 border-emerald-500/20">
+                    <span className="font-display font-bold uppercase text-sm">{m.track}</span>
+                    <span className="text-xs text-emerald-400 font-semibold">R{m.next_race.number}</span>
+                    <span className="font-mono-num text-xs text-zinc-400">{fmtAest(m.next_race.start_aest)}</span>
+                    <span data-testid={`jump-countdown-${m.id}`}
+                      className={`font-mono-num text-[10px] font-bold px-1.5 py-0.5 rounded ${cd === "JUMPING" ? "bg-red-500/20 text-red-400 animate-pulse" : "bg-emerald-500/15 text-emerald-400"}`}>
+                      {cd}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         );
@@ -89,7 +106,16 @@ export default function MeetingsPage() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {data.meetings.map((m) => (
+        {hasMetro && (
+          <div className="md:col-span-2 flex items-center justify-between -mb-1">
+            <p className="text-xs text-zinc-500">{shownMeetings.length} meeting{shownMeetings.length !== 1 ? "s" : ""}</p>
+            <button data-testid="metro-toggle" onClick={toggleMetro}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${metroOnly ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/40" : "text-zinc-400 border-zinc-700 hover:border-zinc-500"}`}>
+              Metro only {metroOnly ? "✓" : ""}
+            </button>
+          </div>
+        )}
+        {shownMeetings.map((m) => (
           <Link key={m.id} to={`/meeting/${m.id}`} data-testid={`meeting-card-${m.id}`} className="pr-card p-4 flex items-center gap-3 group">
             <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
               <Flag className="w-5 h-5 text-emerald-400" />

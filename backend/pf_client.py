@@ -145,6 +145,7 @@ async def load_today(db, date_aest: str) -> bool:
             "condition": m.get("expectedCondition") or "TBA",
             "rail": m.get("railPosition") or "True",
             "races_count": len(pf_races), "feature": idx == 0, "source": "punting_form",
+            "location": m["track"].get("location") or "",
         })
         n_races = len(pf_races)
         for race in pf_races:

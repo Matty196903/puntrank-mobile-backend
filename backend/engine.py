@@ -64,6 +64,7 @@ def seed_day(date_aest, now_aest):
         n_races = rnd.randint(7, 9)
         meetings.append({
             "id": meeting_id, "date": date_aest, "track": track, "state": state,
+            "location": "M" if mi < 3 else "P",
             "condition": rnd.choice(CONDITIONS), "rail": rnd.choice(["True", "+2m", "+4m", "+6m Entire"]),
             "races_count": n_races, "feature": mi == 0,
         })

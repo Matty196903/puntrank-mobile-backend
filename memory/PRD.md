@@ -51,6 +51,8 @@ Build "PuntRank Aus" — full-stack WEB app (target: www.puntrank.com.au). Web v
 - Routes /pay-success and /pay-cancel added; /auth/me + login already return is_pro + pro_plan
 - Pending: user will share GitHub repo with server.py (5325 lines) + pdf_reports.py (1508 lines, WeasyPrint HTML-in-Python, 20 build_*_html fns, NO Jinja2 templates) → merge as-is, switch PDFs fully to WeasyPrint, add /api/guide/*.pdf + /api/billing/config + /api/stripe/* routes. Stripe stays on claimed puntrank-web account. Krok Odds key pending.
 
+- Welcome email on sign-up (branded, today's top pick card, guide CTA), branded reset email, metro-only toggle (meeting.location M/P/C from PF), live next-to-jump countdown (lib/time.js useNow/minsToJump), admin payments view (/api/admin/payments)
+
 ## Backlog / remaining
 - P0: User pastes existing backend export (server.py, pdf_reports.py, models, Stripe price IDs) → merge/reconcile so mobile app shares this DB
 - P1: Deploy to production + custom domain www.puntrank.com.au; user must claim Stripe sandbox + KYC for live payments
