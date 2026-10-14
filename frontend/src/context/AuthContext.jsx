@@ -31,7 +31,7 @@ export function AuthProvider({ children }) {
   };
 
   const register = async (email, password, name) => {
-    const { data } = await api.post("/auth/register", { email, password, name });
+    const { data } = await api.post("/auth/register", { email, password, name, origin_url: window.location.origin });
     applyAuth(data);
   };
 

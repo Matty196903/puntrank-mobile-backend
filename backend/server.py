@@ -115,6 +115,7 @@ class RegisterInput(BaseModel):
     email: str
     password: str = Field(min_length=6)
     name: str = ""
+    origin_url: str = ""
 
 
 class LoginInput(BaseModel):
@@ -152,6 +153,53 @@ def _validate_origin(origin_url: str) -> str:
 
 
 # ---------- auth routes ----------
+async def _send_welcome_email(email: str, name: str, origin: str):
+    try:
+        date = today_aest()
+        meetings = await db.meetings.find({"date": date}, {"_id": 0, "id": 1, "track": 1}).to_list(20)
+        mmap = {m["id"]: m["track"] for m in meetings}
+        pick = await db.runners.find({"meeting_id": {"$in": list(mmap)}, "grade": "A"},
+                                     {"_id": 0}).sort("confidence", -1).to_list(1)
+        pick_html = ""
+        if pick:
+            p = pick[0]
+            race = await db.races.find_one({"id": p["race_id"]}, {"_id": 0, "number": 1})
+            pick_html = (f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;margin:0 0 22px"><tr><td style="padding:14px 18px;font-family:Arial,sans-serif">'
+                         f'<p style="margin:0;font-size:11px;font-weight:bold;color:#059669;letter-spacing:1px">TODAY&#39;S TOP PICK</p>'
+                         f'<p style="margin:4px 0 0;font-size:15px;font-weight:bold;color:#111827">{p["number"]}. {escape(p["name"])}</p>'
+                         f'<p style="margin:2px 0 0;font-size:12px;color:#6b7280">{escape(mmap.get(p["meeting_id"], ""))} R{race["number"] if race else "?"} · Confidence {p["confidence"]}/100</p>'
+                         f'</td></tr></table>')
+        first_name = escape((name or "there").split(" ")[0])
+        html = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background-color:#f4f5f6">
+<div style="display:none;max-height:0;overflow:hidden">Your form-analysis toolkit is ready — here's how to read the grades.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f5f6;padding:28px 12px">
+<tr><td align="center">
+<table role="presentation" width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e5e7eb">
+  <tr><td style="background:#0A0D0E;padding:22px 28px" align="center">
+    <span style="font-family:Arial Black,Arial,sans-serif;font-size:22px;font-weight:900;letter-spacing:1px;color:#ffffff">PUNT<span style="color:#10B981">RANK</span> <span style="color:#F59E0B;font-size:12px;vertical-align:top">AUS</span></span>
+  </td></tr>
+  <tr><td style="padding:30px 28px;font-family:Arial,Helvetica,sans-serif;color:#1f2937">
+    <h1 style="margin:0 0 14px;font-size:20px;color:#111827">Welcome aboard, {first_name} 🏇</h1>
+    <p style="margin:0 0 18px;font-size:14px;line-height:1.6">Your PuntRank Aus account is ready. Every race day we rank today&#39;s runners with win and place probabilities, confidence scores and plain-English reasoning — <b>A grade</b> for the strongest bets, <b>B</b> for solid chances, <b>C</b> for place hopes and exotics.</p>
+    {pick_html}
+    <table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr><td style="border-radius:28px;background:#059669" align="center">
+      <a href="{origin}/guide" style="display:inline-block;padding:13px 34px;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:28px">See how it works</a>
+    </td></tr></table>
+    <p style="margin:16px 0 0;font-size:12px;line-height:1.6;color:#6b7280;word-break:break-all">Or paste this link into your browser:<br><a href="{origin}/guide" style="color:#059669">{origin}/guide</a></p>
+  </td></tr>
+  <tr><td style="padding:16px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;font-family:Arial,sans-serif" align="center">
+    <p style="margin:0;font-size:11px;color:#6b7280;line-height:1.6">Sent by {escape(email_service.EMAIL_FROM_NAME)} — a probability-ranking tool, not a betting service.<br>18+ only · Gamble responsibly · Gambling Help 1800 858 858</p>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>"""
+        await email_service.send_email(to=email, subject="Welcome to PuntRank Aus — your form toolkit is ready", html=html)
+    except Exception:
+        logger.warning(f"Welcome email could not be delivered to {email}")
+
+
 @api.post("/auth/register")
 async def register(body: RegisterInput, response: Response):
     email = body.email.strip().lower()
@@ -164,6 +212,12 @@ async def register(body: RegisterInput, response: Response):
             "is_pro": False, "pro_plan": None,
             "created_at": datetime.now(timezone.utc).isoformat()}
     await db.users.insert_one({**user})
+    if body.origin_url:
+        try:
+            origin = _validate_origin(body.origin_url)
+            asyncio.create_task(_send_welcome_email(email, user["name"], origin))
+        except Exception:
+            pass
     token = create_access_token(user["id"], email)
     _set_cookies(response, token)
     return {"user": _public_user(user), "access_token": token}
