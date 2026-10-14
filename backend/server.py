@@ -210,14 +210,30 @@ async def forgot_password(body: ForgotPasswordInput):
         "token": token, "user_id": user["id"], "used": False,
         "expires_at": datetime.now(timezone.utc) + timedelta(hours=1)})
     link = f"{origin}/reset-password?token={token}"
-    html = (f'<table role="presentation" width="100%"><tr><td style="padding:24px;font-family:Arial,sans-serif;color:#222">'
-            f'<h2 style="margin:0 0 12px">Reset your PuntRank Aus password</h2>'
-            f'<p>Hi {escape(user.get("name") or "there")}, we received a request to reset your password.</p>'
-            f'<p><a href="{link}" style="display:inline-block;padding:12px 22px;background:#10B981;color:#ffffff;'
-            f'text-decoration:none;border-radius:24px;font-weight:bold">Set a new password</a></p>'
-            f'<p style="font-size:13px;color:#555">This link expires in 1 hour. If you did not request this, you can safely ignore this email.</p>'
-            f'<p style="font-size:12px;color:#888">Sent by {escape(email_service.EMAIL_FROM_NAME)}. We never ask for your password or card details by email. 18+ — gamble responsibly.</p>'
-            f'</td></tr></table>')
+    first_name = escape((user.get("name") or "there").split(" ")[0])
+    html = f"""<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background-color:#f4f5f6">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f5f6;padding:28px 12px">
+<tr><td align="center">
+<table role="presentation" width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e5e7eb">
+  <tr><td style="background:#0A0D0E;padding:22px 28px" align="center">
+    <span style="font-family:Arial Black,Arial,sans-serif;font-size:22px;font-weight:900;letter-spacing:1px;color:#ffffff">PUNT<span style="color:#10B981">RANK</span> <span style="color:#F59E0B;font-size:12px;vertical-align:top">AUS</span></span>
+  </td></tr>
+  <tr><td style="padding:30px 28px;font-family:Arial,Helvetica,sans-serif;color:#1f2937">
+    <h1 style="margin:0 0 14px;font-size:20px;color:#111827">Reset your password</h1>
+    <p style="margin:0 0 10px;font-size:14px;line-height:1.6">G'day {first_name},</p>
+    <p style="margin:0 0 22px;font-size:14px;line-height:1.6">We received a request to reset the password for your PuntRank Aus account. Tap the button below to choose a new one.</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr><td style="border-radius:28px;background:#10B981" align="center">
+      <a href="{link}" style="display:inline-block;padding:13px 34px;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:28px">Set a new password</a>
+    </td></tr></table>
+    <p style="margin:22px 0 0;font-size:12px;line-height:1.6;color:#6b7280">This link expires in 1 hour and can only be used once. If you didn't request this, you can safely ignore this email — your password won't change.</p>
+  </td></tr>
+  <tr><td style="padding:16px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;font-family:Arial,sans-serif" align="center">
+    <p style="margin:0;font-size:11px;color:#9ca3af;line-height:1.6">Sent by {escape(email_service.EMAIL_FROM_NAME)} — a probability-ranking tool, not a betting service.<br>We never ask for your password or card details by email.<br>18+ only · Gamble responsibly · Gambling Help 1800 858 858</p>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>"""
     try:
         await email_service.send_email(to=email, subject="Reset your PuntRank Aus password", html=html)
     except Exception:
